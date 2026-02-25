@@ -30,13 +30,15 @@ export class UserService {
       }
     });
 
-    return User.find({
+    const user = await User.find({
       where: userQuery,
       order: {
         firstName: 'ASC',
         lastName: 'ASC',
       },
     });
+
+    return user as User[]
   }
 
   async findById(id: string): Promise<User> {

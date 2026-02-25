@@ -1,14 +1,16 @@
-FROM node:alpine as build
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-COPY . .
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
-RUN yarn
+COPY . .
+ENV NODE_OPTIONS=--openssl-legacy-provider
 RUN yarn build
 
-#---
-
+# -----
+    
 FROM nginx:alpine
 
 COPY --from=build /app/build/ /var/www

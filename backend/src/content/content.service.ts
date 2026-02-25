@@ -8,7 +8,7 @@ import { ContentQuery } from './content.query';
 
 @Injectable()
 export class ContentService {
-  constructor(private readonly courseService: CourseService) {}
+  constructor(private readonly courseService: CourseService) { }
 
   async save(
     courseId: string,
@@ -29,13 +29,15 @@ export class ContentService {
       contentQuery[key] = ILike(`%${contentQuery[key]}%`);
     });
 
-    return await Content.find({
+    const contents = await Content.find({
       where: contentQuery,
       order: {
         name: 'ASC',
         description: 'ASC',
       },
     });
+
+    return contents as Content[];
   }
 
   async findById(id: string): Promise<Content> {
