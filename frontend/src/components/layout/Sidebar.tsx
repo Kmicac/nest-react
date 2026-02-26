@@ -21,29 +21,47 @@ export default function Sidebar({ className }: SidebarProps) {
     history.push('/login');
   };
 
+  const sidebarBackgroundStyle = {
+    backgroundImage: `linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.58) 45%,
+        rgba(0, 0, 0, 0.78) 100%
+      ), url(${process.env.PUBLIC_URL}/sidemenu-bg.jpg)`,
+  };
+
   return (
-    <div className={'sidebar ' + className}>
-      <Link to="/" className="no-underline text-black">
-        <h1 className="font-semibold text-center">Carna Project</h1>
+    <div className={'sidebar ' + className} style={sidebarBackgroundStyle}>
+      <Link to="/" className="sidebar-brand">
+        <img
+          src="/urbano-logo-white.png"
+          alt="Urbano"
+          className="sidebar-brand-image"
+        />
       </Link>
-      <nav className="mt-5 flex flex-col gap-3 flex-grow">
+
+      <nav className="mt-8 flex flex-col gap-3 flex-grow">
         <SidebarItem to="/">
-          <Home /> Dashboard
+          <Home size={18} /> Dashboard
         </SidebarItem>
         <SidebarItem to="/courses">
-          <BookOpen /> Courses
+          <BookOpen size={18} /> Courses
         </SidebarItem>
         {authenticatedUser.role === 'admin' ? (
           <SidebarItem to="/users">
-            <Users /> Users
+            <Users size={18} /> Users
           </SidebarItem>
         ) : null}
       </nav>
+
       <button
-        className="text-red-500 rounded-md p-3 transition-colors flex gap-3 justify-center items-center font-semibold focus:outline-none"
+        type="button"
+        className="sidebar-menu-item"
         onClick={handleLogout}
       >
-        <LogOut /> Logout
+        <span className="sidebar-menu-item-content">
+          <LogOut size={18} /> Logout
+        </span>
       </button>
     </div>
   );

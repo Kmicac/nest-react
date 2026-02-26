@@ -3,50 +3,120 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --brand-primary: #c1292e;
+    --brand-background: #ffffff;
+    --brand-active: #c1292e;
+    --brand-header-background: #e2e1e1;
+    --primary-red: #c1292e;
+    --red-hover: #c1292e;
+    --primary-white: #ffffff;
+    --white-hover: #f2f2f2;
+    --sidebar-button: #2f343c;
+    --sidebar-button-hover: #3b424c;
+    --font-brand: 'Roboto', Helvetica, 'Helvetica Neue', 'Nunito Sans', sans-serif;
+  }
+
   html,
   body,
   #root {
     @apply h-full;
   }
+
+  body {
+    font-family: var(--font-brand);
+    background-color: var(--brand-background);
+  }
+
   h1 {
     @apply text-2xl;
   }
+
   h2 {
     @apply text-xl;
   }
+
   h3 {
     @apply text-lg;
   }
+
   a {
-    @apply text-blue-600 underline;
+    color: var(--brand-primary);
+    @apply underline;
   }
 }
 
 @layer components {
   .btn {
-    @apply p-3 bg-blue-500 rounded-md focus:outline-none text-white;
-    @apply hover:bg-blue-700 transition-all;
+    @apply p-3 rounded-md focus:outline-none text-white transition-colors;
     @apply focus:ring disabled:opacity-50;
+    background-color: var(--primary-red);
   }
+
+  .btn:hover {
+    background-color: var(--red-hover);
+  }
+
   .btn.danger {
-    @apply bg-red-500 hover:bg-red-700;
+    background-color: var(--primary-red);
   }
+
   .input {
     @apply rounded-md border-gray-300 transition-colors disabled:opacity-50;
   }
+
   .card {
     @apply p-5 rounded-md bg-white border;
   }
+
   .table-container {
     @apply border rounded-lg mt-5 shadow overflow-x-auto;
   }
+
   .table-filter {
     @apply flex flex-col lg:flex-row gap-5 rounded-lg p-3 shadow overflow-x-auto border;
+    background-color: var(--brand-header-background);
   }
+
   .sidebar {
-    @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 bg-white lg:translate-x-0 transition-transform;
+    @apply fixed h-full w-72 p-5 shadow-lg flex flex-col transform -translate-x-72 lg:translate-x-0 transition-transform;
+    color: var(--primary-white);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
+
   .sidebar.show {
     @apply translate-x-0 !important;
+  }
+
+  .sidebar-brand {
+    @apply no-underline block;
+  }
+
+  .sidebar-brand-image {
+    @apply w-36 h-auto;
+  }
+
+  .sidebar-menu-item {
+    @apply rounded-lg px-4 py-3 transition-colors border;
+    @apply no-underline;
+    @apply w-full text-left;
+    color: var(--primary-white);
+    background-color: rgba(47, 52, 60, 0.92);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .sidebar-menu-item:hover {
+    background-color: rgba(59, 66, 76, 0.96);
+  }
+
+  .sidebar-menu-item-active {
+    background-color: var(--brand-active);
+    border-color: transparent;
+  }
+
+  .sidebar-menu-item-content {
+    @apply flex items-center gap-3 font-semibold text-sm;
   }
 }

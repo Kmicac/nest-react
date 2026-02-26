@@ -1,26 +1,20 @@
 import { ReactNode } from 'react';
-import { ChevronRight } from 'react-feather';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 interface SidebarItemProps {
   children: ReactNode;
   to: string;
-  active?: boolean;
 }
 
-export default function SidebarItem({
-  children,
-  to,
-  active = false,
-}: SidebarItemProps) {
+export default function SidebarItem({ children, to }: SidebarItemProps) {
   return (
-    <Link
+    <NavLink
       to={to}
-      className="no-underline text-black hover:bg-gray-300 rounded-md p-3 transition-colors"
+      exact
+      className="sidebar-menu-item"
+      activeClassName="sidebar-menu-item-active"
     >
-      <span className="flex gap-5 font-semibold">
-        {children} {active ? <ChevronRight /> : null}
-      </span>
-    </Link>
+      <span className="sidebar-menu-item-content">{children}</span>
+    </NavLink>
   );
 }
