@@ -133,24 +133,17 @@
     background-color: rgba(59, 66, 76, 0.96);
   }
 
-  .page-brand-fixed {
-    @apply fixed right-6 top-10 z-20 rounded-lg border shadow-sm px-3 py-2;
-    background-color: rgba(255, 255, 255, 0.92);
-    border-color: rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(1px);
+  .page-brand-inline {
+    @apply ml-4 flex-shrink-0;
   }
 
-  .page-brand-fixed-image {
-    @apply h-8 w-auto;
+  .page-brand-inline-image {
+    @apply w-36 h-auto;
   }
 
   @media (max-width: 1023px) {
-    .page-brand-fixed {
-      @apply right-3 top-4 px-2.5 py-1.5;
-    }
-
-    .page-brand-fixed-image {
-      @apply h-6;
+    .page-brand-inline-image {
+      @apply w-28 h-auto;
     }
   }
 }

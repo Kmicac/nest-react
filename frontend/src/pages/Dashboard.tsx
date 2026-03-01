@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 
 import Layout from '../components/layout';
+import PageBrandFixed from '../components/shared/PageBrandFixed';
 import useAuth from '../hooks/useAuth';
 import Course from '../models/course/Course';
 import courseService from '../services/CourseService';
@@ -20,7 +21,7 @@ function CourseList({
   icon: 'users' | 'heart';
 }) {
   if (isLoading) {
-    return <p className="text-sm text-gray-500 mt-3">Cargando...</p>;
+    return <p className="text-sm text-gray-500 mt-3">Loading...</p>;
   }
 
   if (courses.length < 1) {
@@ -56,8 +57,8 @@ function CourseList({
               <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
                 {icon === 'users' ? <Users size={12} /> : <Heart size={12} />}
                 {icon === 'users'
-                  ? `${course.enrolledUsersCount ?? 0} inscritos`
-                  : 'Favorito'}
+                  ? `${course.enrolledUsersCount ?? 0} enrolled`
+                  : 'Favorite'}
               </span>
             </div>
           </div>
@@ -124,7 +125,10 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Dashboard</h1>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <h1 className="font-semibold text-3xl">Dashboard</h1>
+        <PageBrandFixed />
+      </div>
       <hr />
 
       <div className="mt-5 flex flex-col gap-5">
@@ -165,16 +169,16 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             <div className="card shadow">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold">Novedades</h2>
+                <h2 className="font-semibold">What's New</h2>
                 <Link to="/courses" className="text-sm no-underline">
-                  Ver todos
+                  View all
                 </Link>
               </div>
 
               <CourseList
                 courses={latestCourses}
                 isLoading={latestCoursesLoading}
-                emptyText="No hay cursos recientes."
+                emptyText="No recent courses."
                 icon="users"
               />
             </div>
@@ -185,13 +189,13 @@ export default function Dashboard() {
                 <Link
                   to="/courses"
                   className="text-sm no-underline"
-                >{`Ver en cursos`}</Link>
+                >{`View in courses`}</Link>
               </div>
 
               <CourseList
                 courses={favoriteCourses}
                 isLoading={favoriteCoursesLoading}
-                emptyText="Aun no marcaste cursos como favoritos."
+                emptyText="You haven't marked any courses as favorites yet."
                 icon="heart"
               />
             </div>
@@ -199,16 +203,16 @@ export default function Dashboard() {
         ) : (
           <div className="card shadow">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">Novedades</h2>
+              <h2 className="font-semibold">What's New</h2>
               <Link to="/courses" className="text-sm no-underline">
-                Ver todos
+                View all
               </Link>
             </div>
 
             <CourseList
               courses={latestCourses}
               isLoading={latestCoursesLoading}
-              emptyText="No hay cursos recientes."
+              emptyText="No recent courses."
               icon="users"
             />
           </div>

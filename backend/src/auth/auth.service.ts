@@ -1,10 +1,4 @@
-import {
-  ForbiddenException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
@@ -76,11 +70,13 @@ export class AuthService {
       throw new HttpException('Refresh token required', HttpStatus.BAD_REQUEST);
     }
 
-    const decoded = this.jwtService.decode(refreshToken);
-    const user = await this.userService.findById(decoded['sub']);
-    const { firstName, lastName, username, id, role } = user;
+    let decoded: any;
 
-    if (!(await bcrypt.compare(refreshToken, user.refreshToken))) {
+    try {
+      decoded = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.REFRESH_SECRET,
+      });
+    } catch (error) {
       response.clearCookie('refresh-token');
       throw new HttpException(
         'Refresh token is not valid',
@@ -88,17 +84,30 @@ export class AuthService {
       );
     }
 
-    try {
-      await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.REFRESH_SECRET,
-      });
-      const accessToken = await this.jwtService.signAsync(
-        { username, firstName, lastName, role },
-        { subject: id, expiresIn: '15m', secret: this.SECRET },
-      );
+    const userId = decoded?.sub;
 
-      return { token: accessToken, user };
-    } catch (error) {
+    if (!userId) {
+      response.clearCookie('refresh-token');
+      throw new HttpException(
+        'Refresh token is not valid',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const user = await this.userService.findById(userId);
+    const { firstName, lastName, username, id, role } = user;
+
+    if (!user.refreshToken || typeof user.refreshToken !== 'string') {
+      response.clearCookie('refresh-token');
+      throw new HttpException(
+        'Refresh token is not valid',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const isTokenMatch = await bcrypt.compare(refreshToken, user.refreshToken);
+
+    if (!isTokenMatch) {
       response.clearCookie('refresh-token');
       await this.userService.setRefreshToken(id, null);
       throw new HttpException(
@@ -106,5 +115,12 @@ export class AuthService {
         HttpStatus.FORBIDDEN,
       );
     }
+
+    const accessToken = await this.jwtService.signAsync(
+      { username, firstName, lastName, role },
+      { subject: id, expiresIn: '15m', secret: this.SECRET },
+    );
+
+    return { token: accessToken, user };
   }
 }

@@ -10,6 +10,7 @@ import FilterDropdown, {
 } from '../components/shared/FilterDropdown';
 import ImageDropzone from '../components/shared/ImageDropzone';
 import Modal from '../components/shared/Modal';
+import PageBrandFixed from '../components/shared/PageBrandFixed';
 import useAuth from '../hooks/useAuth';
 import useDebouncedValue from '../hooks/useDebouncedValue';
 import CreateCourseRequest from '../models/course/CreateCourseRequest';
@@ -96,9 +97,9 @@ export default function Courses() {
         label: 'Pagination',
         selectedValue: String(limit),
         options: [
-          { label: '5 por pagina', value: '5' },
-          { label: '10 por pagina', value: '10' },
-          { label: '20 por pagina', value: '20' },
+          { label: '5 per page', value: '5' },
+          { label: '10 per page', value: '10' },
+          { label: '20 per page', value: '20' },
         ],
         onSelect: (value) => {
           setLimit(Number(value));
@@ -110,9 +111,9 @@ export default function Courses() {
         label: 'Sort',
         selectedValue: sortBy,
         options: [
-          { label: 'Fecha de creacion', value: 'dateCreated' },
-          { label: 'Nombre', value: 'name' },
-          { label: 'Descripcion', value: 'description' },
+          { label: 'Creation date', value: 'dateCreated' },
+          { label: 'Name', value: 'name' },
+          { label: 'Description', value: 'description' },
         ],
         onSelect: (value) => {
           setSortBy(value as 'dateCreated' | 'name' | 'description');
@@ -124,8 +125,8 @@ export default function Courses() {
         label: 'Order',
         selectedValue: sortOrder,
         options: [
-          { label: 'Descendente', value: 'DESC' },
-          { label: 'Ascendente', value: 'ASC' },
+          { label: 'Descending', value: 'DESC' },
+          { label: 'Ascending', value: 'ASC' },
         ],
         onSelect: (value) => {
           setSortOrder(value as 'ASC' | 'DESC');
@@ -140,8 +141,8 @@ export default function Courses() {
         label: 'Favorites',
         selectedValue: favoritesFilter,
         options: [
-          { label: 'Todos', value: 'all' },
-          { label: 'Mis favoritos', value: 'favorites' },
+          { label: 'All', value: 'all' },
+          { label: 'My Favorites', value: 'favorites' },
         ],
         onSelect: (value) => {
           setFavoritesFilter(value as 'all' | 'favorites');
@@ -178,7 +179,10 @@ export default function Courses() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Manage Courses</h1>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <h1 className="font-semibold text-3xl">Manage Courses</h1>
+        <PageBrandFixed />
+      </div>
       <hr />
 
       <div className="my-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

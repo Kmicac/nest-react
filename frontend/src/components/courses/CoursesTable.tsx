@@ -189,7 +189,7 @@ export default function CoursesTable({
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {isEnrolled ? 'Inscrito' : 'No inscrito'}
+                        {isEnrolled ? 'Enrolled' : 'Not enrolled'}
                       </span>
                     </TableItem>
                     <TableItem className="w-[150px] whitespace-nowrap">
@@ -202,8 +202,8 @@ export default function CoursesTable({
                             type="button"
                             aria-label={
                               isFavorite
-                                ? 'Quitar de favoritos'
-                                : 'Agregar a favoritos'
+                                ? 'Remove from favorites'
+                                : 'Add to favorites'
                             }
                             className={`h-9 w-9 rounded-full border flex items-center justify-center transition-colors ${
                               isFavorite
@@ -238,9 +238,9 @@ export default function CoursesTable({
                                 size={16}
                               />
                             ) : isEnrolled ? (
-                              'Darme de baja'
+                              'Unenroll'
                             ) : (
-                              'Inscribirme'
+                              'Enroll'
                             )}
                           </button>
                         </div>

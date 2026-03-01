@@ -8,6 +8,7 @@ import FilterDropdown, {
   FilterDropdownSection,
 } from '../components/shared/FilterDropdown';
 import Modal from '../components/shared/Modal';
+import PageBrandFixed from '../components/shared/PageBrandFixed';
 import UsersTable from '../components/users/UsersTable';
 import useAuth from '../hooks/useAuth';
 import useDebouncedValue from '../hooks/useDebouncedValue';
@@ -101,9 +102,9 @@ export default function Users() {
         label: 'Pagination',
         selectedValue: String(limit),
         options: [
-          { label: '5 por pagina', value: '5' },
-          { label: '10 por pagina', value: '10' },
-          { label: '20 por pagina', value: '20' },
+          { label: '5 per page', value: '5' },
+          { label: '10 per page', value: '10' },
+          { label: '20 per page', value: '20' },
         ],
         onSelect: (value) => {
           setLimit(Number(value));
@@ -115,12 +116,12 @@ export default function Users() {
         label: 'Sort',
         selectedValue: sortBy,
         options: [
-          { label: 'Fecha de creacion', value: 'dateCreated' },
+          { label: 'Creation date', value: 'dateCreated' },
           { label: 'First Name', value: 'firstName' },
           { label: 'Last Name', value: 'lastName' },
           { label: 'Username', value: 'username' },
           { label: 'Role', value: 'role' },
-          { label: 'Estado', value: 'isActive' },
+          { label: 'Status', value: 'isActive' },
         ],
         onSelect: (value) => {
           setSortBy(
@@ -140,8 +141,8 @@ export default function Users() {
         label: 'Order',
         selectedValue: sortOrder,
         options: [
-          { label: 'Descendente', value: 'DESC' },
-          { label: 'Ascendente', value: 'ASC' },
+          { label: 'Descending', value: 'DESC' },
+          { label: 'Ascending', value: 'ASC' },
         ],
         onSelect: (value) => {
           setSortOrder(value as 'ASC' | 'DESC');
@@ -173,7 +174,10 @@ export default function Users() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">Manage Users</h1>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <h1 className="font-semibold text-3xl">Manage Users</h1>
+        <PageBrandFixed />
+      </div>
       <hr />
 
       <div className="my-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
