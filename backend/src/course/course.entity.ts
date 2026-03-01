@@ -22,6 +22,12 @@ export class Course extends BaseEntity {
   @Column({ nullable: true })
   imageUrl?: string;
 
+  isEnrolled?: boolean;
+
+  isFavorite?: boolean;
+
+  enrolledUsersCount?: number;
+
   @Column()
   dateCreated: Date;
 

@@ -1,5 +1,12 @@
-import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class CourseQuery {
   @IsOptional()
@@ -9,6 +16,11 @@ export class CourseQuery {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  favoritesOnly?: boolean = false;
 
   @IsOptional()
   @Type(() => Number)

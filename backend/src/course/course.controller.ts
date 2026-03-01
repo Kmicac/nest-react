@@ -3,10 +3,13 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
   Query,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -55,13 +58,13 @@ export class CourseController {
   }
 
   @Get()
-  async findAll(@Query() query: CourseQuery) {
-    return this.courseService.findAll(query);
+  async findAll(@Query() query: CourseQuery, @Req() request: any) {
+    return this.courseService.findAll(query, request.user?.userId);
   }
 
   @Get('/:id')
-  async findOne(@Param('id') id: string): Promise<Course> {
-    return await this.courseService.findById(id);
+  async findOne(@Param('id') id: string, @Req() request: any): Promise<Course> {
+    return await this.courseService.findById(id, request.user?.userId);
   }
 
   @Put('/:id')
@@ -79,6 +82,35 @@ export class CourseController {
   @Roles(Role.Admin)
   async delete(@Param('id') id: string): Promise<string> {
     return await this.courseService.delete(id);
+  }
+
+  @Post('/:id/enrollment')
+  @Roles(Role.User, Role.Editor, Role.Admin)
+  async enroll(@Param('id') id: string, @Req() request: any) {
+    return await this.courseService.enroll(id, request.user.userId);
+  }
+
+  @Delete('/:id/enrollment')
+  @Roles(Role.User, Role.Editor, Role.Admin)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unenroll(@Param('id') id: string, @Req() request: any): Promise<void> {
+    await this.courseService.unenroll(id, request.user.userId);
+  }
+
+  @Post('/:id/favorite')
+  @Roles(Role.User)
+  async favorite(@Param('id') id: string, @Req() request: any) {
+    return await this.courseService.favorite(id, request.user.userId);
+  }
+
+  @Delete('/:id/favorite')
+  @Roles(Role.User)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unfavorite(
+    @Param('id') id: string,
+    @Req() request: any,
+  ): Promise<void> {
+    await this.courseService.unfavorite(id, request.user.userId);
   }
 
   @Post('/:id/contents')
