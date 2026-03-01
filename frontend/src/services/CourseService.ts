@@ -72,6 +72,22 @@ class CourseService {
   async delete(id: string): Promise<void> {
     await apiService.delete(`/api/courses/${id}`);
   }
+
+  async enroll(id: string): Promise<void> {
+    await apiService.post(`/api/courses/${id}/enrollment`);
+  }
+
+  async unenroll(id: string): Promise<void> {
+    await apiService.delete(`/api/courses/${id}/enrollment`);
+  }
+
+  async favorite(id: string): Promise<void> {
+    await apiService.post(`/api/courses/${id}/favorite`);
+  }
+
+  async unfavorite(id: string): Promise<void> {
+    await apiService.delete(`/api/courses/${id}/favorite`);
+  }
 }
 
 export default new CourseService();

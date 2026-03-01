@@ -20,6 +20,9 @@ export default function Courses() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [favoritesFilter, setFavoritesFilter] = useState<'all' | 'favorites'>(
+    'all',
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [sortBy, setSortBy] = useState<'dateCreated' | 'name' | 'description'>(
@@ -40,12 +43,25 @@ export default function Courses() {
     () => ({
       name: debouncedName || undefined,
       description: debouncedDescription || undefined,
+      favoritesOnly:
+        authenticatedUser.role === 'user' && favoritesFilter === 'favorites'
+          ? true
+          : undefined,
       page,
       limit,
       sortBy,
       sortOrder,
     }),
-    [debouncedName, debouncedDescription, page, limit, sortBy, sortOrder],
+    [
+      debouncedName,
+      debouncedDescription,
+      authenticatedUser.role,
+      favoritesFilter,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    ],
   );
 
   const {
@@ -73,8 +89,8 @@ export default function Courses() {
     }
   }, [page, totalPages]);
 
-  const filterSections: FilterDropdownSection[] = useMemo(
-    () => [
+  const filterSections: FilterDropdownSection[] = useMemo(() => {
+    const sections: FilterDropdownSection[] = [
       {
         id: 'pagination',
         label: 'Pagination',
@@ -116,9 +132,26 @@ export default function Courses() {
           setPage(1);
         },
       },
-    ],
-    [limit, sortBy, sortOrder],
-  );
+    ];
+
+    if (authenticatedUser.role === 'user') {
+      sections.push({
+        id: 'favorites',
+        label: 'Favorites',
+        selectedValue: favoritesFilter,
+        options: [
+          { label: 'Todos', value: 'all' },
+          { label: 'Mis favoritos', value: 'favorites' },
+        ],
+        onSelect: (value) => {
+          setFavoritesFilter(value as 'all' | 'favorites');
+          setPage(1);
+        },
+      });
+    }
+
+    return sections;
+  }, [authenticatedUser.role, favoritesFilter, limit, sortBy, sortOrder]);
 
   const {
     register,
@@ -217,7 +250,12 @@ export default function Courses() {
         </div>
       </div>
 
-      <CoursesTable data={courses} isLoading={isLoading} />
+      <CoursesTable
+        data={courses}
+        isLoading={isLoading}
+        onEnrollmentChanged={() => refetch()}
+        onFavoriteChanged={() => refetch()}
+      />
 
       <p className="mt-3 text-center text-sm text-gray-600">
         Page {page} of {totalPages} | Total: {total}

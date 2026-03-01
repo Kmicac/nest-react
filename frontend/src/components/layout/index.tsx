@@ -9,6 +9,15 @@ export default function Layout({ children }) {
   return (
     <>
       <Sidebar className={showSidebar ? 'show' : ''} />
+
+      <div className="page-brand-fixed" aria-hidden="true">
+        <img
+          src="/urbano-logo-black.png"
+          alt="Urbano"
+          className="page-brand-fixed-image"
+        />
+      </div>
+
       <div className="pt-10 lg:ml-72 mx-auto px-5 sm:px-10 py-5">
         {children}
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Loader, Plus, RefreshCcw, X } from 'react-feather';
+import { Loader, Plus, RefreshCcw, Users, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router';
@@ -154,19 +154,30 @@ export default function Course() {
       </h1>
       <hr />
 
-      <div className="my-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        {authenticatedUser.role !== 'user' ? (
-          <button
-            className="btn flex gap-2 w-full sm:w-auto justify-center"
-            onClick={() => setAddContentShow(true)}
-          >
-            <Plus /> Add Content
-          </button>
-        ) : (
-          <div />
-        )}
+      <div className="my-5 flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="md:flex-1">
+          {authenticatedUser.role !== 'user' ? (
+            <button
+              className="btn flex gap-2 w-full sm:w-auto justify-center"
+              onClick={() => setAddContentShow(true)}
+            >
+              <Plus /> Add Content
+            </button>
+          ) : (
+            <div />
+          )}
+        </div>
 
-        <div className="flex items-center justify-end gap-2">
+        <div className="md:flex-1 flex justify-center">
+          {!userQuery.isLoading ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800">
+              <Users size={16} />
+              {userQuery.data?.enrolledUsersCount ?? 0} inscritos
+            </span>
+          ) : null}
+        </div>
+
+        <div className="md:flex-1 flex items-center justify-end gap-2">
           <FilterDropdown sections={filterSections} />
           <button
             type="button"

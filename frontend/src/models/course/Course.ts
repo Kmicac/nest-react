@@ -3,5 +3,8 @@ export default interface Course {
   name: string;
   description: string;
   imageUrl?: string | null;
-  dateCreated: Date;
+  isEnrolled?: boolean;
+  isFavorite?: boolean;
+  enrolledUsersCount?: number;
+  dateCreated: string;
 }

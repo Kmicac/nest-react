@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { AlertTriangle, Image as ImageIcon, Loader, X } from 'react-feather';
+import {
+  AlertTriangle,
+  Heart,
+  Image as ImageIcon,
+  Loader,
+  X,
+} from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 
@@ -15,9 +21,16 @@ import TableItem from '../shared/TableItem';
 interface UsersTableProps {
   data: Course[];
   isLoading: boolean;
+  onEnrollmentChanged?: () => Promise<unknown> | void;
+  onFavoriteChanged?: () => Promise<unknown> | void;
 }
 
-export default function CoursesTable({ data, isLoading }: UsersTableProps) {
+export default function CoursesTable({
+  data,
+  isLoading,
+  onEnrollmentChanged,
+  onFavoriteChanged,
+}: UsersTableProps) {
   const { authenticatedUser } = useAuth();
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -29,6 +42,10 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
   >(null);
   const [updateCourseImage, setUpdateCourseImage] = useState<File | null>(null);
   const [removeCourseImage, setRemoveCourseImage] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState<string>();
+  const [enrollmentUpdatingId, setEnrollmentUpdatingId] = useState<string>();
+  const [favoriteError, setFavoriteError] = useState<string>();
+  const [favoriteUpdatingId, setFavoriteUpdatingId] = useState<string>();
 
   const {
     register,
@@ -69,68 +86,199 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
     }
   };
 
+  const handleEnrollment = async (courseId: string, isEnrolled: boolean) => {
+    try {
+      setEnrollmentError(undefined);
+      setEnrollmentUpdatingId(courseId);
+
+      if (isEnrolled) {
+        await courseService.unenroll(courseId);
+      } else {
+        await courseService.enroll(courseId);
+      }
+
+      if (onEnrollmentChanged) {
+        await onEnrollmentChanged();
+      }
+    } catch (error: any) {
+      setEnrollmentError(
+        error?.response?.data?.message ?? 'Error updating enrollment status',
+      );
+    } finally {
+      setEnrollmentUpdatingId(undefined);
+    }
+  };
+
+  const handleFavorite = async (courseId: string, isFavorite: boolean) => {
+    try {
+      setFavoriteError(undefined);
+      setFavoriteUpdatingId(courseId);
+
+      if (isFavorite) {
+        await courseService.unfavorite(courseId);
+      } else {
+        await courseService.favorite(courseId);
+      }
+
+      if (onFavoriteChanged) {
+        await onFavoriteChanged();
+      }
+    } catch (error: any) {
+      setFavoriteError(
+        error?.response?.data?.message ?? 'Error updating favorites',
+      );
+    } finally {
+      setFavoriteUpdatingId(undefined);
+    }
+  };
+
   return (
     <>
+      {enrollmentError ? (
+        <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50 mb-3">
+          {enrollmentError}
+        </div>
+      ) : null}
+
+      {favoriteError ? (
+        <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50 mb-3">
+          {favoriteError}
+        </div>
+      ) : null}
+
       <div className="table-container">
-        <Table columns={['Image', 'Name', 'Description', 'Created']}>
+        <Table
+          columns={['Image', 'Name', 'Description', 'Enrollment', 'Created']}
+        >
           {isLoading
             ? null
-            : data.map(({ id, name, description, imageUrl, dateCreated }) => (
-                <tr key={id}>
-                  <TableItem className="w-[110px]">
-                    {imageUrl ? (
-                      <img
-                        src={imageUrl}
-                        alt={name}
-                        className="h-14 w-20 rounded-md border object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-14 w-20 rounded-md border bg-gray-100 text-gray-400 flex items-center justify-center">
-                        <ImageIcon size={16} />
-                      </div>
-                    )}
-                  </TableItem>
-                  <TableItem className="w-[220px]">
-                    <Link to={`/courses/${id}`}>{name}</Link>
-                  </TableItem>
-                  <TableItem className="w-[45%]">{description}</TableItem>
-                  <TableItem className="w-[150px] whitespace-nowrap">
-                    {new Date(dateCreated).toLocaleDateString()}
-                  </TableItem>
-                  <TableItem className="text-right whitespace-nowrap">
-                    {['admin', 'editor'].includes(authenticatedUser.role) ? (
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedCourseId(id);
-                          setSelectedCourseImageUrl(imageUrl ?? null);
-                          setUpdateCourseImage(null);
-                          setRemoveCourseImage(false);
-
-                          setValue('name', name);
-                          setValue('description', description);
-
-                          setUpdateShow(true);
-                        }}
+            : data.map(
+                ({
+                  id,
+                  name,
+                  description,
+                  imageUrl,
+                  isEnrolled,
+                  isFavorite,
+                  dateCreated,
+                }) => (
+                  <tr key={id}>
+                    <TableItem className="w-[110px]">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={name}
+                          className="h-14 w-20 rounded-md border object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-14 w-20 rounded-md border bg-gray-100 text-gray-400 flex items-center justify-center">
+                          <ImageIcon size={16} />
+                        </div>
+                      )}
+                    </TableItem>
+                    <TableItem className="w-[220px]">
+                      <Link to={`/courses/${id}`}>{name}</Link>
+                    </TableItem>
+                    <TableItem className="w-[38%]">{description}</TableItem>
+                    <TableItem className="whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          isEnrolled
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
                       >
-                        Edit
-                      </button>
-                    ) : null}
-                    {authenticatedUser.role === 'admin' ? (
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedCourseId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </TableItem>
-                </tr>
-              ))}
+                        {isEnrolled ? 'Inscrito' : 'No inscrito'}
+                      </span>
+                    </TableItem>
+                    <TableItem className="w-[150px] whitespace-nowrap">
+                      {new Date(dateCreated).toLocaleDateString()}
+                    </TableItem>
+                    <TableItem className="text-right whitespace-nowrap">
+                      {authenticatedUser.role === 'user' ? (
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            aria-label={
+                              isFavorite
+                                ? 'Quitar de favoritos'
+                                : 'Agregar a favoritos'
+                            }
+                            className={`h-9 w-9 rounded-full border flex items-center justify-center transition-colors ${
+                              isFavorite
+                                ? 'bg-red-50 text-red-600 border-red-200'
+                                : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50'
+                            }`}
+                            onClick={() =>
+                              handleFavorite(id, Boolean(isFavorite))
+                            }
+                            disabled={favoriteUpdatingId === id}
+                          >
+                            {favoriteUpdatingId === id ? (
+                              <Loader className="animate-spin" size={14} />
+                            ) : (
+                              <Heart
+                                size={16}
+                                fill={isFavorite ? 'currentColor' : 'none'}
+                              />
+                            )}
+                          </button>
+
+                          <button
+                            className="btn px-3 py-2"
+                            onClick={() =>
+                              handleEnrollment(id, Boolean(isEnrolled))
+                            }
+                            disabled={enrollmentUpdatingId === id}
+                          >
+                            {enrollmentUpdatingId === id ? (
+                              <Loader
+                                className="mx-auto animate-spin"
+                                size={16}
+                              />
+                            ) : isEnrolled ? (
+                              'Darme de baja'
+                            ) : (
+                              'Inscribirme'
+                            )}
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {['admin', 'editor'].includes(authenticatedUser.role) ? (
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                          onClick={() => {
+                            setSelectedCourseId(id);
+                            setSelectedCourseImageUrl(imageUrl ?? null);
+                            setUpdateCourseImage(null);
+                            setRemoveCourseImage(false);
+
+                            setValue('name', name);
+                            setValue('description', description);
+
+                            setUpdateShow(true);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      ) : null}
+                      {authenticatedUser.role === 'admin' ? (
+                        <button
+                          className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
+                          onClick={() => {
+                            setSelectedCourseId(id);
+                            setDeleteShow(true);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </TableItem>
+                  </tr>
+                ),
+              )}
         </Table>
         {!isLoading && data.length < 1 ? (
           <div className="text-center my-5 text-gray-500">
