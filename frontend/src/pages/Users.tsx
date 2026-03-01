@@ -177,12 +177,16 @@ export default function Users() {
       <hr />
 
       <div className="my-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <button
-          className="btn flex gap-2 w-full sm:w-auto justify-center"
-          onClick={() => setAddUserShow(true)}
-        >
-          <Plus /> Add User
-        </button>
+        {authenticatedUser.role === 'admin' ? (
+          <button
+            className="btn flex gap-2 w-full sm:w-auto justify-center"
+            onClick={() => setAddUserShow(true)}
+          >
+            <Plus /> Add User
+          </button>
+        ) : (
+          <div />
+        )}
 
         <div className="flex items-center justify-end gap-2">
           <FilterDropdown sections={filterSections} />

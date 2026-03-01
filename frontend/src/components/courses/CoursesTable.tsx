@@ -24,7 +24,9 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [error, setError] = useState<string>();
   const [updateShow, setUpdateShow] = useState<boolean>(false);
-  const [selectedCourseImageUrl, setSelectedCourseImageUrl] = useState<string | null>(null);
+  const [selectedCourseImageUrl, setSelectedCourseImageUrl] = useState<
+    string | null
+  >(null);
   const [updateCourseImage, setUpdateCourseImage] = useState<File | null>(null);
   const [removeCourseImage, setRemoveCourseImage] = useState(false);
 

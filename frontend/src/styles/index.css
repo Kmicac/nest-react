@@ -120,4 +120,16 @@
   .sidebar-menu-item-content {
     @apply flex items-center gap-3 font-semibold text-sm;
   }
+
+  .sidebar-settings-button {
+    @apply h-11 w-11 rounded-full border transition-colors;
+    @apply flex items-center justify-center focus:outline-none;
+    color: var(--primary-white);
+    background-color: rgba(47, 52, 60, 0.92);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .sidebar-settings-button:hover {
+    background-color: rgba(59, 66, 76, 0.96);
+  }
 }

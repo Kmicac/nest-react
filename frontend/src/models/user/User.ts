@@ -5,4 +5,5 @@ export default interface User {
   username: string;
   role: string;
   isActive: boolean;
+  dateCreated: string;
 }

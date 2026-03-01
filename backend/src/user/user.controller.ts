@@ -41,7 +41,7 @@ export class UserController {
   }
 
   @Get()
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Editor)
   async findAll(@Query() userQuery: UserQuery) {
     return this.userService.findAll(userQuery);
   }

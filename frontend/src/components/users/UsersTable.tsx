@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 
+import useAuth from '../../hooks/useAuth';
 import UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import User from '../../models/user/User';
 import userService from '../../services/UserService';
@@ -15,6 +16,7 @@ interface UsersTableProps {
 }
 
 export default function UsersTable({ data, isLoading }: UsersTableProps) {
+  const { authenticatedUser } = useAuth();
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [updateShow, setUpdateShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -59,7 +61,15 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
           {isLoading
             ? null
             : data.map(
-                ({ id, firstName, lastName, role, isActive, username }) => (
+                ({
+                  id,
+                  firstName,
+                  lastName,
+                  role,
+                  isActive,
+                  username,
+                  dateCreated,
+                }) => (
                   <tr key={id}>
                     <TableItem>{`${firstName} ${lastName}`}</TableItem>
                     <TableItem>{username}</TableItem>
@@ -75,32 +85,41 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
                       )}
                     </TableItem>
                     <TableItem>{role}</TableItem>
+                    <TableItem className="whitespace-nowrap">
+                      {dateCreated
+                        ? new Date(dateCreated).toLocaleDateString()
+                        : '-'}
+                    </TableItem>
                     <TableItem className="text-right">
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedUserId(id);
+                      {authenticatedUser.role === 'admin' ? (
+                        <>
+                          <button
+                            className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                            onClick={() => {
+                              setSelectedUserId(id);
 
-                          setValue('firstName', firstName);
-                          setValue('lastName', lastName);
-                          setValue('username', username);
-                          setValue('role', role);
-                          setValue('isActive', isActive);
+                              setValue('firstName', firstName);
+                              setValue('lastName', lastName);
+                              setValue('username', username);
+                              setValue('role', role);
+                              setValue('isActive', isActive);
 
-                          setUpdateShow(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedUserId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        Delete
-                      </button>
+                              setUpdateShow(true);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
+                            onClick={() => {
+                              setSelectedUserId(id);
+                              setDeleteShow(true);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      ) : null}
                     </TableItem>
                   </tr>
                 ),
