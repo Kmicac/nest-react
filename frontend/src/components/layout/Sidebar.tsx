@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { BookOpen, Home, LogOut, Settings, Users } from 'react-feather';
+import {
+  Activity,
+  BookOpen,
+  Home,
+  LogOut,
+  Settings,
+  Users,
+} from 'react-feather';
 import { useHistory } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -50,6 +57,9 @@ export default function Sidebar({ className }: SidebarProps) {
           </SidebarItem>
           <SidebarItem to="/courses">
             <BookOpen size={18} /> Courses
+          </SidebarItem>
+          <SidebarItem to="/audit-logs">
+            <Activity size={18} /> Audit Logs
           </SidebarItem>
           {['admin', 'editor'].includes(authenticatedUser.role) ? (
             <SidebarItem to="/users">

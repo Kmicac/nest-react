@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Switch } from 'react-router-dom';
 
 import useAuth from './hooks/useAuth';
+import AuditLogs from './pages/AuditLogs';
 import Contents from './pages/Contents';
 import Courses from './pages/Courses';
 import Dashboard from './pages/Dashboard';
@@ -45,6 +46,7 @@ export default function App() {
         />
         <PrivateRoute exact path="/courses" component={Courses} />
         <PrivateRoute exact path="/courses/:id" component={Contents} />
+        <PrivateRoute exact path="/audit-logs" component={AuditLogs} />
 
         <AuthRoute exact path="/login" component={Login} />
       </Switch>
