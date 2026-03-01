@@ -24,9 +24,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<LoginResponseDto> {
-    return await this.authService.login(loginDto, response);
+    return await this.authService.login(loginDto, request, response);
   }
 
   @UseGuards(JwtGuard)
@@ -48,6 +49,6 @@ export class AuthController {
   ): Promise<LoginResponseDto> {
     const refresh = request.cookies['refresh-token'];
 
-    return await this.authService.refresh(refresh, response);
+    return await this.authService.refresh(refresh, request, response);
   }
 }
