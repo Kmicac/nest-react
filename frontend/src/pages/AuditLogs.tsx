@@ -3,6 +3,9 @@ import { CheckCircle, RefreshCcw, XCircle } from 'react-feather';
 import { useQuery } from 'react-query';
 
 import Layout from '../components/layout';
+import FilterDropdown, {
+  FilterDropdownSection,
+} from '../components/shared/FilterDropdown';
 import PageBrandFixed from '../components/shared/PageBrandFixed';
 import useAuth from '../hooks/useAuth';
 import useDebouncedValue from '../hooks/useDebouncedValue';
@@ -13,6 +16,8 @@ type SelectOption = {
   label: string;
   value: string;
 };
+
+type DateRangeFilter = 'ALL' | 'TODAY' | 'LAST_7_DAYS' | 'LAST_30_DAYS';
 
 const ACTION_OPTIONS: SelectOption[] = [
   { label: 'User signed in', value: 'AUTH_LOGIN' },
@@ -42,6 +47,13 @@ const ENTITY_OPTIONS: SelectOption[] = [
   { label: 'Content', value: 'content' },
   { label: 'Enrollment', value: 'enrollment' },
   { label: 'Favorite', value: 'favorite' },
+];
+
+const DATE_RANGE_OPTIONS: SelectOption[] = [
+  { label: 'Any time', value: 'ALL' },
+  { label: 'Today', value: 'TODAY' },
+  { label: 'Last 7 days', value: 'LAST_7_DAYS' },
+  { label: 'Last 30 days', value: 'LAST_30_DAYS' },
 ];
 
 const ACTION_LABELS = ACTION_OPTIONS.reduce<Record<string, string>>(
@@ -162,6 +174,33 @@ function getStatusPresentation(status: AuditLogStatus): {
   };
 }
 
+function resolveDateRange(range: DateRangeFilter): {
+  dateFrom?: string;
+  dateTo?: string;
+} {
+  if (range === 'ALL') {
+    return {};
+  }
+
+  const now = new Date();
+  const startDate = new Date(now);
+
+  if (range === 'TODAY') {
+    startDate.setHours(0, 0, 0, 0);
+    return { dateFrom: startDate.toISOString(), dateTo: now.toISOString() };
+  }
+
+  if (range === 'LAST_7_DAYS') {
+    startDate.setDate(now.getDate() - 6);
+    startDate.setHours(0, 0, 0, 0);
+    return { dateFrom: startDate.toISOString(), dateTo: now.toISOString() };
+  }
+
+  startDate.setDate(now.getDate() - 29);
+  startDate.setHours(0, 0, 0, 0);
+  return { dateFrom: startDate.toISOString(), dateTo: now.toISOString() };
+}
+
 export default function AuditLogs() {
   const { authenticatedUser } = useAuth();
 
@@ -173,8 +212,7 @@ export default function AuditLogs() {
   const [entityType, setEntityType] = useState('');
   const [entityId, setEntityId] = useState('');
   const [status, setStatus] = useState<'ALL' | AuditLogStatus>('ALL');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateRange, setDateRange] = useState<DateRangeFilter>('ALL');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
 
@@ -182,35 +220,35 @@ export default function AuditLogs() {
   const debouncedEntityId = useDebouncedValue(entityId);
   const debouncedActorUserId = useDebouncedValue(actorUserId);
 
-  const queryParams = useMemo(
-    () => ({
+  const queryParams = useMemo(() => {
+    const resolvedRange = resolveDateRange(dateRange);
+
+    return {
       actorUserId: isAdmin ? debouncedActorUserId || undefined : undefined,
       actorUsername: debouncedActorUsername || undefined,
       action: action || undefined,
       entityType: entityType || undefined,
       entityId: debouncedEntityId || undefined,
       status: status === 'ALL' ? undefined : status,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
+      dateFrom: resolvedRange.dateFrom,
+      dateTo: resolvedRange.dateTo,
       page,
       limit,
       sortBy: 'createdAt' as const,
       sortOrder: 'DESC' as const,
-    }),
-    [
-      isAdmin,
-      debouncedActorUserId,
-      debouncedActorUsername,
-      action,
-      entityType,
-      debouncedEntityId,
-      status,
-      dateFrom,
-      dateTo,
-      page,
-      limit,
-    ],
-  );
+    };
+  }, [
+    isAdmin,
+    debouncedActorUserId,
+    debouncedActorUsername,
+    action,
+    entityType,
+    debouncedEntityId,
+    status,
+    dateRange,
+    page,
+    limit,
+  ]);
 
   const {
     data: logsResponse,
@@ -237,6 +275,70 @@ export default function AuditLogs() {
     }
   }, [page, totalPages]);
 
+  const filterSections: FilterDropdownSection[] = useMemo(
+    () => [
+      {
+        id: 'activity',
+        label: 'Activity',
+        selectedValue: action || 'ALL',
+        options: [{ label: 'All activities', value: 'ALL' }, ...ACTION_OPTIONS],
+        onSelect: (value) => {
+          setAction(value === 'ALL' ? '' : value);
+          setPage(1);
+        },
+      },
+      {
+        id: 'area',
+        label: 'Area',
+        selectedValue: entityType || 'ALL',
+        options: [{ label: 'All areas', value: 'ALL' }, ...ENTITY_OPTIONS],
+        onSelect: (value) => {
+          setEntityType(value === 'ALL' ? '' : value);
+          setPage(1);
+        },
+      },
+      {
+        id: 'result',
+        label: 'Result',
+        selectedValue: status,
+        options: [
+          { label: 'All results', value: 'ALL' },
+          { label: 'Completed', value: 'SUCCESS' },
+          { label: 'Failed', value: 'FAIL' },
+        ],
+        onSelect: (value) => {
+          setStatus(value as 'ALL' | AuditLogStatus);
+          setPage(1);
+        },
+      },
+      {
+        id: 'date-range',
+        label: 'Date range',
+        selectedValue: dateRange,
+        options: DATE_RANGE_OPTIONS,
+        onSelect: (value) => {
+          setDateRange(value as DateRangeFilter);
+          setPage(1);
+        },
+      },
+      {
+        id: 'page-size',
+        label: 'Page size',
+        selectedValue: String(limit),
+        options: [
+          { label: '5 per page', value: '5' },
+          { label: '10 per page', value: '10' },
+          { label: '20 per page', value: '20' },
+        ],
+        onSelect: (value) => {
+          setLimit(Number(value));
+          setPage(1);
+        },
+      },
+    ],
+    [action, entityType, status, dateRange, limit],
+  );
+
   return (
     <Layout>
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -245,155 +347,76 @@ export default function AuditLogs() {
       </div>
       <hr />
 
-      <div className="my-5 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          aria-label="Refresh audit logs"
-          onClick={() => refetch()}
-          className="h-10 w-10 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring transition-colors flex items-center justify-center disabled:opacity-50"
-          disabled={isFetching}
-        >
-          <RefreshCcw size={16} className={isFetching ? 'animate-spin' : ''} />
-        </button>
-      </div>
-
-      <div className="table-filter mt-2">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col md:flex-row gap-2">
-            {isAdmin ? (
-              <input
-                type="text"
-                className="input h-11 w-full md:w-1/4"
-                placeholder="User ID (Admin filter)"
-                value={actorUserId}
-                onChange={(e) => {
-                  setActorUserId(e.target.value);
-                  setPage(1);
-                }}
-              />
-            ) : null}
-
+      <div className="table-filter mt-5">
+        <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-1">
+          {isAdmin ? (
             <input
               type="text"
-              className="input h-11 w-full md:w-1/4"
-              placeholder="Username"
-              value={actorUsername}
+              className="input h-11 min-w-[220px] shrink-0"
+              placeholder="User ID (Admin filter)"
+              value={actorUserId}
               onChange={(e) => {
-                setActorUsername(e.target.value);
+                setActorUserId(e.target.value);
                 setPage(1);
               }}
             />
+          ) : null}
 
-            <select
-              className="input h-11 w-full md:w-1/4"
-              value={action}
-              onChange={(e) => {
-                setAction(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Activities</option>
-              {ACTION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <input
+            type="text"
+            className="input h-11 min-w-[200px] shrink-0"
+            placeholder="Username"
+            value={actorUsername}
+            onChange={(e) => {
+              setActorUsername(e.target.value);
+              setPage(1);
+            }}
+          />
 
-            <select
-              className="input h-11 w-full md:w-1/4"
-              value={entityType}
-              onChange={(e) => {
-                setEntityType(e.target.value);
-                setPage(1);
-              }}
-            >
-              <option value="">All Areas</option>
-              {ENTITY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <input
+            type="text"
+            className="input h-11 min-w-[200px] shrink-0"
+            placeholder="Reference ID"
+            value={entityId}
+            onChange={(e) => {
+              setEntityId(e.target.value);
+              setPage(1);
+            }}
+          />
+
+          <div className="shrink-0">
+            <FilterDropdown sections={filterSections} />
           </div>
 
-          <div className="flex flex-col md:flex-row gap-2">
-            <input
-              type="text"
-              className="input h-11 w-full md:w-1/4"
-              placeholder="Reference ID"
-              value={entityId}
-              onChange={(e) => {
-                setEntityId(e.target.value);
-                setPage(1);
-              }}
+          <button
+            type="button"
+            aria-label="Refresh audit logs"
+            onClick={() => refetch()}
+            className="h-10 w-10 shrink-0 rounded-full border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring transition-colors flex items-center justify-center disabled:opacity-50"
+            disabled={isFetching}
+          >
+            <RefreshCcw
+              size={16}
+              className={isFetching ? 'animate-spin' : ''}
             />
+          </button>
 
-            <select
-              className="input h-11 w-full md:w-1/4"
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value as 'ALL' | AuditLogStatus);
-                setPage(1);
-              }}
-            >
-              <option value="ALL">All Results</option>
-              <option value="SUCCESS">Completed</option>
-              <option value="FAIL">Failed</option>
-            </select>
-
-            <input
-              type="date"
-              className="input h-11 w-full md:w-1/4"
-              value={dateFrom}
-              onChange={(e) => {
-                setDateFrom(e.target.value);
-                setPage(1);
-              }}
-            />
-
-            <input
-              type="date"
-              className="input h-11 w-full md:w-1/4"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-end gap-2">
-            <select
-              className="input h-11 w-full md:w-44"
-              value={String(limit)}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-            >
-              <option value="5">5 per page</option>
-              <option value="10">10 per page</option>
-              <option value="20">20 per page</option>
-            </select>
-
-            <button
-              type="button"
-              className="btn px-4 py-2.5"
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={page <= 1}
-            >
-              Prev
-            </button>
-            <button
-              type="button"
-              className="btn px-4 py-2.5"
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={page >= totalPages}
-            >
-              Next
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn px-4 py-2.5 shrink-0"
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            disabled={page <= 1}
+          >
+            Prev
+          </button>
+          <button
+            type="button"
+            className="btn px-4 py-2.5 shrink-0"
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={page >= totalPages}
+          >
+            Next
+          </button>
         </div>
       </div>
 
