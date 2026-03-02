@@ -75,8 +75,8 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Carna Project API')
-      .setDescription('Carna Project API Documentation')
+      .setTitle('Urbano API')
+      .setDescription('Urbano API Documentation')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

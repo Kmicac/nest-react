@@ -15,7 +15,21 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 import { AuditAction } from '../audit-log/audit-action.enum';
 import { AuditLogService } from '../audit-log/audit-log.service';
@@ -53,6 +67,30 @@ export class CourseController {
   @Post()
   @Roles(Role.Admin, Role.Editor)
   @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: 'Create a new course (optional image upload)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['name', 'description'],
+      properties: {
+        name: { type: 'string', example: 'Docker Fundamentals' },
+        description: {
+          type: 'string',
+          example: 'Hands-on containerization course for beginners',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Optional image (JPG/PNG/WEBP, max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'Course created successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid payload or invalid image file' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Insufficient role to create course' })
   async save(
     @Body() createCourseDto: CreateCourseDto,
     @UploadedFile() image: CourseImageFile,
@@ -81,11 +119,17 @@ export class CourseController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List courses with filters, sorting and pagination' })
+  @ApiOkResponse({ description: 'Courses returned successfully' })
   async findAll(@Query() query: CourseQuery, @Req() request: any) {
     return this.courseService.findAll(query, request.user?.userId);
   }
 
   @Get('/:id')
+  @ApiOperation({ summary: 'Get course by ID' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiOkResponse({ description: 'Course returned successfully' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
   async findOne(@Param('id') id: string, @Req() request: any): Promise<Course> {
     return await this.courseService.findById(id, request.user?.userId);
   }
@@ -93,6 +137,32 @@ export class CourseController {
   @Put('/:id')
   @Roles(Role.Admin, Role.Editor)
   @UseInterceptors(FileInterceptor('image'))
+  @ApiOperation({ summary: 'Update a course (replace/remove image supported)' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Docker Fundamentals - Advanced' },
+        description: { type: 'string', example: 'Updated description' },
+        removeImage: {
+          type: 'boolean',
+          example: false,
+          description: 'Set true to remove current image if no new image is provided',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+          description: 'Optional new image (JPG/PNG/WEBP, max 5MB)',
+        },
+      },
+    },
+  })
+  @ApiOkResponse({ description: 'Course updated successfully' })
+  @ApiBadRequestResponse({ description: 'Invalid payload or invalid image file' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
+  @ApiForbiddenResponse({ description: 'Insufficient role to update course' })
   async update(
     @Param('id') id: string,
     @Body() updateCourseDto: UpdateCourseDto,
@@ -122,6 +192,10 @@ export class CourseController {
 
   @Delete('/:id')
   @Roles(Role.Admin)
+  @ApiOperation({ summary: 'Delete a course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiOkResponse({ description: 'Course deleted successfully (returns deleted id)' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
   async delete(@Param('id') id: string, @Req() request: any): Promise<string> {
     const deletedId = await this.courseService.delete(id);
 
@@ -144,6 +218,10 @@ export class CourseController {
 
   @Post('/:id/enrollment')
   @Roles(Role.User, Role.Editor, Role.Admin)
+  @ApiOperation({ summary: 'Enroll authenticated user in a course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiCreatedResponse({ description: 'Enrollment created (or already exists)' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
   async enroll(@Param('id') id: string, @Req() request: any) {
     const enrollment = await this.courseService.enroll(id, request.user.userId);
 
@@ -170,6 +248,10 @@ export class CourseController {
   @Delete('/:id/enrollment')
   @Roles(Role.User, Role.Editor, Role.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Unenroll authenticated user from a course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiNoContentResponse({ description: 'Unenrolled successfully' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
   async unenroll(@Param('id') id: string, @Req() request: any): Promise<void> {
     await this.courseService.unenroll(id, request.user.userId);
 
@@ -193,6 +275,11 @@ export class CourseController {
 
   @Post('/:id/favorite')
   @Roles(Role.User)
+  @ApiOperation({ summary: 'Add course to favorites for authenticated user' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiCreatedResponse({ description: 'Favorite created (or already exists)' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
+  @ApiForbiddenResponse({ description: 'Only user role can favorite courses' })
   async favorite(@Param('id') id: string, @Req() request: any) {
     const favorite = await this.courseService.favorite(id, request.user.userId);
 
@@ -219,6 +306,11 @@ export class CourseController {
   @Delete('/:id/favorite')
   @Roles(Role.User)
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove course from favorites for authenticated user' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiNoContentResponse({ description: 'Course removed from favorites' })
+  @ApiNotFoundResponse({ description: 'Course not found' })
+  @ApiForbiddenResponse({ description: 'Only user role can unfavorite courses' })
   async unfavorite(
     @Param('id') id: string,
     @Req() request: any,
@@ -245,6 +337,8 @@ export class CourseController {
 
   @Post('/:id/contents')
   @Roles(Role.Admin, Role.Editor)
+  @ApiOperation({ summary: 'Create content inside a course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
   async saveContent(
     @Param('id') id: string,
     @Body() createContentDto: CreateContentDto,
@@ -273,6 +367,8 @@ export class CourseController {
   }
 
   @Get('/:id/contents')
+  @ApiOperation({ summary: 'List contents from a specific course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
   async findAllContentsByCourseId(
     @Param('id') id: string,
     @Query() contentQuery: ContentQuery,
@@ -282,6 +378,9 @@ export class CourseController {
 
   @Put('/:id/contents/:contentId')
   @Roles(Role.Admin, Role.Editor)
+  @ApiOperation({ summary: 'Update content from a specific course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiParam({ name: 'contentId', type: String, description: 'Content ID (uuid)' })
   async updateContent(
     @Param('id') id: string,
     @Param('contentId') contentId: string,
@@ -316,6 +415,9 @@ export class CourseController {
 
   @Delete('/:id/contents/:contentId')
   @Roles(Role.Admin)
+  @ApiOperation({ summary: 'Delete content from a specific course' })
+  @ApiParam({ name: 'id', type: String, description: 'Course ID (uuid)' })
+  @ApiParam({ name: 'contentId', type: String, description: 'Content ID (uuid)' })
   async deleteContent(
     @Param('id') id: string,
     @Param('contentId') contentId: string,
